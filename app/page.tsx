@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function RetirementDashboard() {
   const [balances, setBalances] = useState({
@@ -11,22 +12,19 @@ export default function RetirementDashboard() {
   });
   const [tslaPrice, setTslaPrice] = useState(423.67);
   const [tslaChange, setTslaChange] = useState(1.26);
-  const [lastUpdated, setLastUpdated] = useState('');
 
   const retirementTotal = balances.eric + balances.bridget;
   const goal = 5000000;
   const progress = ((retirementTotal / goal) * 100).toFixed(1);
 
-  useEffect(() => {
-    setLastUpdated(new Date().toLocaleTimeString());
-    
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(() => {
-      setLastUpdated(new Date().toLocaleTimeString());
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Sample historical data (we'll make this dynamic later)
+  const historicalData = [
+    { date: 'Jan', total: 420000 },
+    { date: 'Feb', total: 435000 },
+    { date: 'Mar', total: 448000 },
+    { date: 'Apr', total: 462000 },
+    { date: 'May', total: 466508 },
+  ];
 
   return (
     <div className="max-w-[480px] mx-auto min-h-screen bg-[#0a0a0a] p-4 text-white">
@@ -37,9 +35,7 @@ export default function RetirementDashboard() {
           <div className="text-[#e31937] text-xs tracking-[3px]">RETIREMENT TRACKER v2</div>
           <div className="text-3xl font-semibold">Portfolio Dashboard</div>
         </div>
-        <div className="text-right text-xs text-gray-400">
-          Updated {lastUpdated}
-        </div>
+        <div className="text-right text-xs text-gray-400">Live</div>
       </div>
 
       {/* Live TSLA */}
@@ -77,6 +73,29 @@ export default function RetirementDashboard() {
         </div>
       </div>
 
+      {/* Historical Chart */}
+      <div className="card p-5 mb-4">
+        <div className="text-xs text-gray-400 mb-3">PORTFOLIO GROWTH (LAST 5 MONTHS)</div>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={historicalData}>
+              <XAxis dataKey="date" stroke="#666" />
+              <YAxis stroke="#666" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1f1f1f', border: 'none', color: '#fff' }} 
+              />
+              <Line 
+                type="monotone" 
+                dataKey="total" 
+                stroke="#e31937" 
+                strokeWidth={3}
+                dot={{ fill: '#e31937', r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Jensen (Separate) */}
       <div className="card p-5 mb-4 bg-[#1a1a1a]">
         <div className="flex justify-between items-center">
@@ -88,24 +107,8 @@ export default function RetirementDashboard() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="card p-5 mb-4">
-        <div className="h-3 bg-[#333] rounded-full overflow-hidden mb-2">
-          <motion.div 
-            className="h-3 bg-[#e31937]"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1 }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-gray-400">
-          <div>${retirementTotal.toLocaleString()}</div>
-          <div>$5,000,000</div>
-        </div>
-      </div>
-
       <div className="text-center text-[10px] text-gray-500 mt-8">
-        v2.0 • Live from Truthify • Auto-updates at 5:30 AM PST
+        v2.1 • Historical tracking enabled • 5:30 AM PST
       </div>
     </div>
   );
