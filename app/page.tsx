@@ -12,12 +12,12 @@ export default function RetirementDashboard() {
   });
   const [tslaPrice, setTslaPrice] = useState(423.67);
   const [tslaChange, setTslaChange] = useState(1.26);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const retirementTotal = balances.eric + balances.bridget;
   const goal = 5000000;
   const progress = ((retirementTotal / goal) * 100).toFixed(1);
 
-  // Sample historical data (we'll make this dynamic later)
   const historicalData = [
     { date: 'Jan', total: 420000 },
     { date: 'Feb', total: 435000 },
@@ -25,6 +25,38 @@ export default function RetirementDashboard() {
     { date: 'Apr', total: 462000 },
     { date: 'May', total: 466508 },
   ];
+
+  // Enable Push Notifications
+  const enableNotifications = async () => {
+    if (!('Notification' in window)) {
+      alert('Push notifications are not supported in this browser');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    
+    if (permission === 'granted') {
+      setNotificationsEnabled(true);
+      
+      // Subscribe to push notifications
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' // We'll set this up later
+      });
+
+      // Send subscription to our server
+      await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+
+      alert('✅ Daily notifications enabled! You\'ll receive the dashboard at 5:30 AM PST.');
+    } else {
+      alert('Notification permission denied');
+    }
+  };
 
   return (
     <div className="max-w-[480px] mx-auto min-h-screen bg-[#0a0a0a] p-4 text-white">
@@ -81,16 +113,8 @@ export default function RetirementDashboard() {
             <LineChart data={historicalData}>
               <XAxis dataKey="date" stroke="#666" />
               <YAxis stroke="#666" />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#1f1f1f', border: 'none', color: '#fff' }} 
-              />
-              <Line 
-                type="monotone" 
-                dataKey="total" 
-                stroke="#e31937" 
-                strokeWidth={3}
-                dot={{ fill: '#e31937', r: 4 }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: '#1f1f1f', border: 'none', color: '#fff' }} />
+              <Line type="monotone" dataKey="total" stroke="#e31937" strokeWidth={3} dot={{ fill: '#e31937', r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -107,8 +131,22 @@ export default function RetirementDashboard() {
         </div>
       </div>
 
-      <div className="text-center text-[10px] text-gray-500 mt-8">
-        v2.1 • Historical tracking enabled • 5:30 AM PST
+      {/* Enable Notifications Button */}
+      <div className="card p-5 mb-4">
+        <button 
+          onClick={enableNotifications}
+          disabled={notificationsEnabled}
+          className="w-full py-3 bg-[#e31937] text-white rounded-2xl font-medium disabled:bg-gray-600"
+        >
+          {notificationsEnabled ? '✅ Daily Notifications Enabled' : 'Enable Daily 5:30 AM Notifications'}
+        </button>
+        <p className="text-xs text-gray-400 text-center mt-2">
+          Get the dashboard delivered automatically every morning
+        </p>
+      </div>
+
+      <div className="text-center text-[10px] text-gray-500 mt-4">
+        v2.2 • Push notifications enabled • 5:30 AM PST
       </div>
     </div>
   );
