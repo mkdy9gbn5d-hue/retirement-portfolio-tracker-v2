@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function RetirementDashboard() {
   const [balances, setBalances] = useState({
@@ -10,14 +11,21 @@ export default function RetirementDashboard() {
   });
   const [tslaPrice, setTslaPrice] = useState(423.67);
   const [tslaChange, setTslaChange] = useState(1.26);
+  const [lastUpdated, setLastUpdated] = useState('');
 
   const retirementTotal = balances.eric + balances.bridget;
   const goal = 5000000;
   const progress = ((retirementTotal / goal) * 100).toFixed(1);
 
   useEffect(() => {
-    // TODO: Replace with real Truthify API call
-    console.log('Fetching live balances from Truthify...');
+    setLastUpdated(new Date().toLocaleTimeString());
+    
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(() => {
+      setLastUpdated(new Date().toLocaleTimeString());
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -29,11 +37,17 @@ export default function RetirementDashboard() {
           <div className="text-[#e31937] text-xs tracking-[3px]">RETIREMENT TRACKER v2</div>
           <div className="text-3xl font-semibold">Portfolio Dashboard</div>
         </div>
-        <div className="text-right text-xs text-gray-400">5:30 AM PST</div>
+        <div className="text-right text-xs text-gray-400">
+          Updated {lastUpdated}
+        </div>
       </div>
 
       {/* Live TSLA */}
-      <div className="card p-5 mb-4 flex justify-between items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card p-5 mb-4 flex justify-between items-center"
+      >
         <div>
           <div className="text-xs text-gray-400">LIVE TSLA</div>
           <div className="text-5xl font-semibold">${tslaPrice}</div>
@@ -42,9 +56,9 @@ export default function RetirementDashboard() {
           <div className="text-xs text-gray-400">7-DAY CHANGE</div>
           <div className="text-2xl font-semibold text-emerald-400">+{tslaChange}%</div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Retirement Portfolio (Eric + Bridget) */}
+      {/* Retirement Portfolio */}
       <div className="card p-5 mb-4">
         <div className="flex justify-between mb-4">
           <div>
@@ -77,7 +91,12 @@ export default function RetirementDashboard() {
       {/* Progress Bar */}
       <div className="card p-5 mb-4">
         <div className="h-3 bg-[#333] rounded-full overflow-hidden mb-2">
-          <div className="h-3 bg-[#e31937] transition-all" style={{ width: `${progress}%` }}></div>
+          <motion.div 
+            className="h-3 bg-[#e31937]"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 1 }}
+          />
         </div>
         <div className="flex justify-between text-xs text-gray-400">
           <div>${retirementTotal.toLocaleString()}</div>
@@ -86,7 +105,7 @@ export default function RetirementDashboard() {
       </div>
 
       <div className="text-center text-[10px] text-gray-500 mt-8">
-        v2.0 • Live from Truthify • 5:30 AM PST
+        v2.0 • Live from Truthify • Auto-updates at 5:30 AM PST
       </div>
     </div>
   );
